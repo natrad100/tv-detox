@@ -39,6 +39,45 @@ case "$state" in
   *) echo "Can't reach $TV. Check the TV is on, on the same Wi-Fi, and has USB/network debugging turned on." >&2; exit 1 ;;
 esac
 
+# Facts about the TV, before anything is changed.
+tvprop() { adb -s "$TV" shell getprop "$1" 2>/dev/null | tr -d '\r'; }
+mfr=$(tvprop ro.product.manufacturer); brand=$(tvprop ro.product.brand); model=$(tvprop ro.product.model)
+sdk=$(tvprop ro.build.version.sdk); rel=$(tvprop ro.build.version.release)
+memfree=$(adb -s "$TV" shell "grep MemAvailable /proc/meminfo" 2>/dev/null | tr -d '\r' | tr -s ' ' | cut -d' ' -f2)
+echo "TV: ${mfr:-?} ${model:-?} (brand ${brand:-?}), Android ${rel:-?} (API ${sdk:-?}), free memory $([ -n "$memfree" ] && echo "$((memfree / 1024)) MB" || echo unknown)"
+
+# A copy of the TV's state, kept on this computer, in case the copy on the TV is lost.
+BACKUP="tvhome-backup-$(date +%Y%m%d-%H%M%S).txt"
+{ echo "# $TV $mfr $model"
+  echo "# Apps that were already off before install.sh:"
+  adb -s "$TV" shell pm list packages -d 2>/dev/null | tr -d '\r'
+  echo "# Home screen before install.sh:"
+  adb -s "$TV" shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME 2>/dev/null | tr -d '\r'
+} > "$BACKUP"
+echo "Saved the TV's current state to $BACKUP"
+
+# SONIQ TVs haven't been tested with this home screen. Install it, but leave the TV's own home screen
+# and every system app on, unless SONIQ_DISABLE=1 says otherwise.
+soniq=
+case "$(printf '%s %s %s %s' "$mfr" "$brand" "$model" "$(tvprop ro.product.name)" | tr '[:upper:]' '[:lower:]')" in
+  *soniq*) soniq=1 ;;
+esac
+if [ -n "$soniq" ]; then
+  echo "This is a SONIQ TV. It hasn't been tested with this home screen."
+  if [ "$SONIQ_DISABLE" = 1 ]; then
+    echo "SONIQ_DISABLE=1: known TV launchers will be offered for turning off, as on other TVs."
+  else
+    echo "The home screen is installed, but no system app is turned off. If Home still opens SONIQ's own"
+    echo "screen, pick this one in the \"which home screen\" prompt and choose Always. To also turn off"
+    echo "launchers, run again with SONIQ_DISABLE=1, only if you can reconnect over USB or port 5555."
+  fi
+  if [ -z "$YES" ]; then
+    printf "Go ahead and install? [y/N] "
+    read answer </dev/tty || answer=n
+    case "$answer" in y|Y|yes) ;; *) echo "Cancelled. Nothing was changed."; exit 1 ;; esac
+  fi
+fi
+
 APK=out/tvhome.apk
 if [ ! -f "$APK" ]; then
   APK=$(mktemp -d)/tvhome.apk
@@ -168,6 +207,7 @@ google_tv=
 # Google TV's own home screen is what makes it Google TV. Android TV has the setup app too.
 if installed "$LAUNCHERX"; then google_tv=1; fi
 may_turn_off=1
+if [ -n "$soniq" ] && [ "$SONIQ_DISABLE" != 1 ]; then may_turn_off=; fi
 if [ -n "$google_tv" ] && [ "$GOOGLE_TV" != 1 ]; then
   may_turn_off=
   if [ "$(current_home)" != "$ME" ]; then

@@ -45,6 +45,20 @@ Claude Code or Codex does the work. You just press OK on the remote.
 
 **[▶ Claude Made My Old Android TV Feel Brand New](https://www.youtube.com/watch?v=fP2SGGVsaB0)** · the full setup on a real TV, in 4 minutes.
 
+## This fork
+
+This is a fork of [Ansub/tv-detox](https://github.com/Ansub/tv-detox). Use **this fork's** `install.sh` and `undo.sh`, not the original's. Differences:
+
+- `install.sh` downloads a **pinned release** (`TVHOME_TAG`) from this repo, not "latest", and **verifies its SHA-256** before installing. Set `TVHOME_SHA256` to check against a hash you noted yourself.
+- Releases are built in GitHub Actions with pinned action versions and signed with this fork's own key.
+- It prints the TV's model, Android version and free memory first, and saves the TV's current state to `tvhome-backup-*.txt` on your computer.
+- **SONIQ TVs** get extra care, see [SONIQ notes](#soniq-notes).
+
+```sh
+git clone https://github.com/natrad100/tv-detox && cd tv-detox
+sh install.sh <TV_IP> "com.netflix.ninja,com.google.android.youtube.tv"
+```
+
 ## Get started
 
 **1. Turn on developer mode on the TV.**
@@ -82,9 +96,11 @@ My TV is a <brand and model>.
    also never turn off Google TV's home screen
    (com.google.android.apps.tv.launcherx). If you're not
    sure, leave it on.
-6. Install the home screen: download
-   https://github.com/natrad100/tv-detox and run its
-   install.sh with my TV and these apps: <your apps>.
+6. Install the home screen: clone
+   https://github.com/natrad100/tv-detox (this fork, not
+   Ansub/tv-detox) and run install.sh from that clone, with
+   my TV and these apps: <your apps>. Don't download
+   anything else for the home screen.
 7. Turn off animations and make the TV sleep after 5
    minutes. Then check the model name and ask me if the TV
    is OLED. Keep the screensaver on unless I say it's not
@@ -118,6 +134,17 @@ In **Developer options**, turn off **USB debugging**, plus **Network debugging**
 
 > [!NOTE]
 > **Turn debugging off afterwards.** While USB, Network or Wireless debugging is on, other devices on your network can ask to control the TV. Turn it off once setup is done, and back on only to run `undo.sh` or update.
+
+<a id="soniq-notes"></a>
+### SONIQ notes
+
+SONIQ TVs haven't been tested with this home screen. When `install.sh` sees a SONIQ TV it:
+
+- asks you to confirm before it changes anything (`YES=1` skips the question),
+- installs the home screen but **turns off no system apps**, so the TV keeps its own home screen as a fallback,
+- tells you to pick this home screen and choose **Always** if Android asks which one to use.
+
+Turning off SONIQ's launcher is opt-in with `SONIQ_DISABLE=1`. Only do that if you can reconnect over USB or port 5555, and run `sh undo.sh <TV_IP>` first if anything misbehaves. Before cleaning up, run `sh candidates.sh <TV_IP>` and look at every app marked `review`: SONIQ package names aren't in the built-in lists, so unknown apps are never assumed safe.
 
 ## Help
 

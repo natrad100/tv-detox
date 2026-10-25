@@ -4,3 +4,4 @@ key.jks
 .DS_Store
 .idea
 *.jks
+tvhome-backup-*.txt
