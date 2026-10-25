@@ -8,9 +8,13 @@
 # On Google TV (Chromecast with Google TV and others) the TV's own home screen is left on.
 # GOOGLE_TV=1 turns it off anyway; only do that if you can reconnect over USB or port 5555.
 #
-# Uses out/tvhome.apk if you built it, otherwise downloads the latest release.
+# Uses out/tvhome.apk if you built it, otherwise downloads the pinned release and checks its SHA-256.
+# TVHOME_SHA256 overrides the release checksum, so a hash you noted yourself can be used.
 set -e
 cd "$(dirname "$0")"
+
+# Release this script installs. Bump it on purpose after reviewing a new release.
+TVHOME_TAG=${TVHOME_TAG:-v1.5.3-nr1}
 
 TARGET="$1"; APPS="$2"; QUICK="$3"
 [ -n "$TARGET" ] || { echo "Usage: sh install.sh <TV_IP> [\"app1,app2,...\"] [\"bluetooth,sound,picture\"]" >&2; exit 1; }
@@ -39,7 +43,12 @@ APK=out/tvhome.apk
 if [ ! -f "$APK" ]; then
   APK=$(mktemp -d)/tvhome.apk
   echo "Downloading the home screen…"
-  curl -fsSL -o "$APK" https://github.com/Ansub/tv-detox/releases/latest/download/tvhome.apk
+  base=https://github.com/natrad100/tv-detox/releases/download/$TVHOME_TAG
+  curl -fsSL -o "$APK" "$base/tvhome.apk"
+  want=${TVHOME_SHA256:-$(curl -fsSL "$base/tvhome.apk.sha256" | cut -d' ' -f1)}
+  if command -v sha256sum >/dev/null 2>&1; then got=$(sha256sum "$APK" | cut -d' ' -f1)
+  else got=$(shasum -a 256 "$APK" | cut -d' ' -f1); fi
+  [ -n "$want" ] && [ "$got" = "$want" ] || { echo "Checksum mismatch for the downloaded home screen. Not installing." >&2; exit 1; }
 fi
 
 echo "Installing… If your TV shows a Google Play Protect message, follow it on the TV to allow the install."

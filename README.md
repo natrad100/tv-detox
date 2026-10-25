@@ -8,8 +8,8 @@
 
 Claude Code or Codex does the work. You just press OK on the remote.
 
-[![Release](https://img.shields.io/github/v/release/Ansub/tv-detox?color=black)](https://github.com/Ansub/tv-detox/releases/latest)
-[![Tests](https://img.shields.io/github/actions/workflow/status/Ansub/tv-detox/build.yml?branch=main&label=tests)](https://github.com/Ansub/tv-detox/actions)
+[![Release](https://img.shields.io/github/v/release/natrad100/tv-detox?color=black)](https://github.com/natrad100/tv-detox/releases/latest)
+[![Tests](https://img.shields.io/github/actions/workflow/status/natrad100/tv-detox/build.yml?branch=main&label=tests)](https://github.com/natrad100/tv-detox/actions)
 [![License](https://img.shields.io/badge/license-MIT-black)](LICENSE)
 [![YouTube](https://img.shields.io/badge/YouTube-@ansubkhan-FF0000?logo=youtube&logoColor=white)](https://www.youtube.com/@ansubkhan)
 
@@ -83,7 +83,7 @@ My TV is a <brand and model>.
    (com.google.android.apps.tv.launcherx). If you're not
    sure, leave it on.
 6. Install the home screen: download
-   https://github.com/Ansub/tv-detox and run its
+   https://github.com/natrad100/tv-detox and run its
    install.sh with my TV and these apps: <your apps>.
 7. Turn off animations and make the TV sleep after 5
    minutes. Then check the model name and ask me if the TV
